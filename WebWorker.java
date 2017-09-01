@@ -69,7 +69,8 @@ public void run()
 }
 
 /**
-* Read the HTTP request header.
+* Read the HTTP request header. 
+* Modified from original: if "GET" found, split request line to obtain path. 
 **/
 private void readHTTPRequest(InputStream is)
 {
@@ -100,6 +101,8 @@ private void readHTTPRequest(InputStream is)
 
 /**
 * Write the HTTP header lines to the client network connection.
+* Modified from original to include the proper HTTP response which depends on whether or not the file is found.
+*
 * @param os is the OutputStream object to write to
 * @param contentType is the string MIME content type (e.g. "text/html")
 **/
@@ -133,6 +136,7 @@ private void writeHTTPHeader(OutputStream os, String contentType) throws Excepti
 /**
 * Write the data content to the client network connection. This MUST
 * be done after the HTTP header has been written out.
+* Modified read an html file and output it to the output stream. Replacing tags specified in assignment.
 * @param os is the OutputStream object to write to
 **/
 private void writeContent(OutputStream os) throws Exception
@@ -149,10 +153,12 @@ private void writeContent(OutputStream os) throws Exception
          r = new BufferedReader(new FileReader(new File("."+filename)));
          // read line from html file
          while ((line = r.readLine()) != null)
-         {
+         { 
+               //replace date tag with current date
 		 if(line.contains("<cs371date>")){
 	 		line = line.replaceAll("<cs371date>", day.format(today));
 		 }
+               //replace server tag with message
         	 if(line.contains("<cs371server>")){
 	 		line = line.replaceAll("<cs371server>", "Hello, World! Server");
 		 }
@@ -164,6 +170,8 @@ private void writeContent(OutputStream os) throws Exception
       }//end try  
       
       catch (IOException e) {
+
+        //If not found, displays message
       	os.write("<html><head></head><body>".getBytes());
         os.write("<h3>404 Page not found</h3>".getBytes());
         os.write("</body></html>".getBytes());
