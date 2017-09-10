@@ -35,7 +35,7 @@ public class WebWorker implements Runnable
 private String filename = ""; //create string to store file name
 private String code = ""; //create string to store code variable
 private Socket socket;
-
+private String filetype = ""; //create string to store file type
 /**
 * Constructor: must have a valid open socket
 **/
@@ -57,7 +57,7 @@ public void run()
       InputStream  is = socket.getInputStream();
       OutputStream os = socket.getOutputStream();
       readHTTPRequest(is);
-      writeHTTPHeader(os,"text/html");
+      writeHTTPHeader(os,filetype);//modified to include correct file type
       writeContent(os);
       os.flush();
       socket.close();
@@ -71,10 +71,11 @@ public void run()
 /**
 * Read the HTTP request header. 
 * Modified from original: if "GET" found, split request line to obtain path. 
+* Modified to save file type onto a String variable.
 **/
 private void readHTTPRequest(InputStream is)
 {
-
+   String[] typeSplit;
    String line;
    BufferedReader r = new BufferedReader(new InputStreamReader(is));
 
@@ -86,11 +87,29 @@ private void readHTTPRequest(InputStream is)
          line = r.readLine();
          System.err.println("Request line: ("+line+")");
 	 String[] path = line.split(" "); //create array to store path from request, split request line
-         if(path[0].equals("GET"))
+
+         if(path[0].equals("GET")){
             filename = path[1];//store file path in filename String
+  	    typeSplit = filename.split("\\."); //separate by the period
+
+            //if statements to save file type onto filetype variable
+            if (typeSplit[1].equals("png"))
+		filetype = "image/png";
+ 	    else if (typeSplit[1].equals("gif"))
+		filetype = "image/gif";
+	    else if (typeSplit[1].equals("jpeg"))
+		filetype = "image/jpeg";
+	    else if (typeSplit[1].equals("ico"))
+		filetype = "image/x-icon";
+ 	    else if (typeSplit[1].equals("html"))
+		filetype = "text/html";
+	 }//end if
+
          if (line.length()==0) 
          break;
-      } catch (Exception e) {
+      } //end try
+      
+      catch (Exception e) {
          System.err.println("Request error: "+e);
          break;
       }
@@ -148,7 +167,8 @@ private void writeContent(OutputStream os) throws Exception
    //get the current date
    Date today = new Date();
    DateFormat day = new SimpleDateFormat("MM/dd/yyyy");
-   
+
+   if (filetype.equals("text/html")){
       try {	
          r = new BufferedReader(new FileReader(new File("."+filename)));
          // read line from html file
@@ -177,8 +197,34 @@ private void writeContent(OutputStream os) throws Exception
         os.write("</body></html>".getBytes());
 
       }//end catch
+   }//end if
+
+   else{
+     try {	
+         FileInputStream reader = new FileInputStream(new File("."+filename));
+         int bytes;// create integer variable
+         // read line from image file
+         while (( bytes = reader.read()) != -1) // read from filename byte by byte
+         { 
+             //output bytes
+             os.write(bytes); 
+         
+         }//end while
+         reader.close();
+     
+      }//end try  
+      
+      catch (IOException e) {
+
+        //If not found, displays message
+      	os.write("<html><head></head><body>".getBytes());
+        os.write("<h3>404 Page not found</h3>".getBytes());
+        os.write("</body></html>".getBytes());
+
+      }//end catch
 
      os.close();
+   }//end else
 
 }
 } // end class

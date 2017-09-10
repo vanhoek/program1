@@ -1,7 +1,12 @@
-<project default = "compile">
-	<target name = "compile">
-		<javac srcdir= "." includeantruntime = "false"/>
+<project default = "compile"> 
+     <property name = "test" location="test"/>
+	<target name = "compile" depends = "clean" >
+		<javac srcdir= "." destdir= "${test}" includeantruntime = "false"/>
+	</target>
+	<target name = "run" depends = "compile">
+		<java dir= "${test}" fork = "yes" classname = "WebServer"/>
+	</target>
+	<target name = "clean">
+		<delete> <fileset dir= "${test}"> <include name = "*.class" /> </fileset> </delete>
 	</target>
 </project>
-
-
