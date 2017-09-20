@@ -1,4 +1,4 @@
-<project default = "compile"> 
+<project default = "run"> 
      <property name = "test" location="test"/>
 	<target name = "compile" depends = "clean" >
 		<javac srcdir= "." destdir= "${test}" includeantruntime = "false"/>
